@@ -1,0 +1,24 @@
+server:
+  port: 8080
+  forward-headers-strategy: framework
+spring:
+  web:
+    resources:
+      static-locations: file:/app/static/,classpath:/static/
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/decisiontwin}
+    username: ${SPRING_DATASOURCE_USERNAME:decisiontwin}
+    password: ${SPRING_DATASOURCE_PASSWORD:change-me}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  jackson:
+    default-property-inclusion: non_null
+app:
+  jwt-secret: ${JWT_SECRET:replace-with-a-random-secret-of-at-least-32-characters}
+  access-ttl-minutes: 20
+  refresh-ttl-days: 30
+  simulation-engine-url: ${SIMULATION_ENGINE_URL:http://localhost:8001}

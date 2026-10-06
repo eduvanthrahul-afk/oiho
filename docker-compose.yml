@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-decisiontwin}
+      POSTGRES_USER: ${POSTGRES_USER:-decisiontwin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-decisiontwin} -d ${POSTGRES_DB:-decisiontwin}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  simulation-engine:
+    build: ./simulation-engine
+    environment:
+      PORT: 8001
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+    ports:
+      - "8001:8001"
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-decisiontwin}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-decisiontwin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-secret-of-at-least-32-characters}
+      SIMULATION_ENGINE_URL: ${SIMULATION_ENGINE_URL:-http://simulation-engine:8001}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      simulation-engine:
+        condition: service_started
+volumes:
+  postgres-data:
